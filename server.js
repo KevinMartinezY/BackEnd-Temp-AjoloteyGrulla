@@ -99,19 +99,15 @@ app.post('/api/recuperar', async (req, res) => {
         const linkRecuperacion = `https://ajolote-backend.onrender.com/api/recuperar?token=${token}`;
 
         // Enviar el correo usando Nodemailer
-        await transporter.sendMail({
-            from: `"Ajolote y Grulla" <${process.env.EMAIL_USER}>`,
-            to: email,
-            subject: 'Recuperación de contraseña - Ajolote y Grulla',
-            html: `
-                <div style="font-family: Arial, sans-serif; color: #333;">
-                    <h2>Recuperación de Contraseña 🐾</h2>
-                    <p>Has solicitado restablecer tu contraseña en Ajolote y Grulla.</p>
-                    <p>Haz clic en el siguiente botón para continuar (el enlace expira en 1 hora):</p>
-                    <a href="${linkRecuperacion}" style="background-color: #ff6b6b; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Restablecer Contraseña</a>
-                    <p>Si tú no pediste esto, puedes ignorar este correo.</p>
-                </div>
-            `
+       // Configuración robusta de Nodemailer para servidores en la nube
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true, // Usa SSL/TLS
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
         });
 
         console.log(`Correo de recuperación enviado a: ${email}`);
