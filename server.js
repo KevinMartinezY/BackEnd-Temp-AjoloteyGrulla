@@ -25,9 +25,9 @@ const iniciarBaseDeDatos = async () => {
                 token_expiracion TIMESTAMP
             );
         `);
-        console.log("✅ Base de datos conectada y tabla 'usuarios' lista");
+        console.log("Base de datos conectada y tabla 'usuarios' lista");
     } catch (error) {
-        console.error("❌ Error al conectar a PostgreSQL:", error);
+        console.error("Error al conectar a PostgreSQL:", error);
     }
 };
 
@@ -35,7 +35,7 @@ iniciarBaseDeDatos();
 
 // Ruta principal de prueba
 app.get('/', (req, res) => {
-    res.json({ mensaje: "¡El backend de Ajolote y Grulla está activo! 🚀" });
+    res.json({ mensaje: "¡El backend de Ajolote y Grulla está activo!" });
 });
 
 // Ruta para el formulario de recuperar contraseña
