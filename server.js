@@ -3,7 +3,8 @@ const cors = require('cors');
 const { Pool } = require('pg');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
-const nodemailer = require('nodemailer'); // Para enviar correos
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const app = express();
 
@@ -14,13 +15,18 @@ const pool = new Pool({
     connectionString: process.env.DATABASE_URL
 });
 
-// Configuración de Nodemailer usando tu Gmail
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
+// Enviar el correo usando la API HTTP de Resend
+await resend.emails.send({
+    from: 'Ajolote y Grulla <onboarding@resend.dev>',
+    to: email,
+    subject: 'Recuperación de contraseña - Ajolote y Grulla',
+    html: `
+        <div style="font-family: Arial, sans-serif; color: #333;">
+            <h2>Recuperación de Contraseña </h2>
+            <p>Has solicitado restablecer tu contraseña.</p>
+            <a href="https://ajolote-backend.onrender.com/api/recuperar?token=${token}" style="background-color: #ff6b6b; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Restablecer Contraseña</a>
+        </div>
+    `
 });
 
 const iniciarBaseDeDatos = async () => {
