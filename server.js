@@ -33,7 +33,7 @@ const iniciarBaseDeDatos = async () => {
 iniciarBaseDeDatos();
 
 app.get('/', (req, res) => {
-    res.json({ mensaje: "¡El backend de Ajolote y Grulla está activo! 🚀" });
+    res.json({ mensaje: "Base de datos en ejecucion con exito" });
 });
 
 // ==========================================
