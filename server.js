@@ -63,7 +63,7 @@ app.post('/api/registro', async (req, res) => {
         );
 
         console.log(`Nuevo usuario registrado: ${email}`);
-        res.status(201).json({ ok: true, mensaje: "Usuario registrado con éxito." });
+        res.status(201).json({ ok: true});
     } catch (error) {
         if (error.code === '23505') {
             return res.status(400).json({ ok: false, mensaje: "Ese correo ya está registrado." });
