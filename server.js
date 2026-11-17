@@ -4,8 +4,8 @@ const { Pool } = require('pg');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const { Resend } = require('resend');
-const resend = new Resend(process.env.RESEND_API_KEY);
 
+const resend = new Resend(process.env.RESEND_API_KEY);
 const app = express();
 
 app.use(express.json());
@@ -13,20 +13,6 @@ app.use(cors());
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL
-});
-
-// Enviar el correo usando la API HTTP de Resend
-await resend.emails.send({
-    from: 'Ajolote y Grulla <onboarding@resend.dev>',
-    to: email,
-    subject: 'Recuperación de contraseña - Ajolote y Grulla',
-    html: `
-        <div style="font-family: Arial, sans-serif; color: #333;">
-            <h2>Recuperación de Contraseña </h2>
-            <p>Has solicitado restablecer tu contraseña.</p>
-            <a href="https://ajolote-backend.onrender.com/api/recuperar?token=${token}" style="background-color: #ff6b6b; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Restablecer Contraseña</a>
-        </div>
-    `
 });
 
 const iniciarBaseDeDatos = async () => {
@@ -49,7 +35,7 @@ const iniciarBaseDeDatos = async () => {
 iniciarBaseDeDatos();
 
 app.get('/', (req, res) => {
-    res.json({ mensaje: "¡El backend de Ajolote y Grulla está activo!" });
+    res.json({ mensaje: "El backend de Ajolote y Grulla está activo" });
 });
 
 // 1. REGISTRO
@@ -69,7 +55,8 @@ app.post('/api/registro', async (req, res) => {
         );
 
         console.log(`Nuevo usuario registrado: ${email}`);
-        res.status(201).json({ ok: true});
+        console.log("Ta bien");
+        res.status(201).json({ ok: true, mensaje: "Usuario registrado con éxito." });
     } catch (error) {
         if (error.code === '23505') {
             return res.status(400).json({ ok: false, mensaje: "Ese correo ya está registrado." });
@@ -79,7 +66,7 @@ app.post('/api/registro', async (req, res) => {
     }
 });
 
-// 2. RECUPERAR (Genera token y envía el correo real)
+// 2. RECUPERAR (Genera token y envía el correo con Resend)
 app.post('/api/recuperar', async (req, res) => {
     const { email } = req.body;
     if (!email) {
@@ -101,19 +88,20 @@ app.post('/api/recuperar', async (req, res) => {
             [token, expiracion, email]
         );
 
-        // Enlace que le llegará al usuario (apuntando a tu frontend o vista de cambio de password)
-        const linkRecuperacion = `https://ajolote-backend.onrender.com/api/recuperar?token=${token}`;
+        const linkRecuperacion = `https://ajolote-backend.onrender.com/api/cambiar-password?token=${token}`;
 
-        // Enviar el correo usando Nodemailer
-       // Configuración robusta de Nodemailer para servidores en la nube
-        const transporter = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true, // Usa SSL/TLS
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
+        // Enviar el correo usando la API HTTP de Resend
+        await resend.emails.send({
+            from: 'Ajolote y Grulla <onboarding@resend.dev>',
+            to: email,
+            subject: 'Recuperación de contraseña - Ajolote y Grulla',
+            html: `
+                <div style="font-family: Arial, sans-serif; color: #333;">
+                    <h2>Recuperación de Contraseña</h2>
+                    <p>Has solicitado restablecer tu contraseña.</p>
+                    <a href="${linkRecuperacion}" style="background-color: #ff6b6b; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Restablecer Contraseña</a>
+                </div>
+            `
         });
 
         console.log(`Correo de recuperación enviado a: ${email}`);
@@ -134,7 +122,6 @@ app.post('/api/cambiar-password', async (req, res) => {
     }
 
     try {
-        // Buscar si el token existe y si aún no expira
         const resultado = await pool.query(
             'SELECT * FROM usuarios WHERE reset_token = $1 AND token_expiracion > NOW()',
             [token]
@@ -146,18 +133,16 @@ app.post('/api/cambiar-password', async (req, res) => {
 
         const usuario = resultado.rows[0];
 
-        // Encriptar la nueva contraseña
         const saltRounds = 10;
         const passwordEncriptada = await bcrypt.hash(nuevaPassword, saltRounds);
 
-        // Actualizar contraseña y borrar el token usado
         await pool.query(
             'UPDATE usuarios SET password = $1, reset_token = NULL, token_expiracion = NULL WHERE id = $2',
             [passwordEncriptada, usuario.id]
         );
 
         console.log(`Contraseña actualizada con éxito para el usuario ID: ${usuario.id}`);
-        res.json({ ok: true, mensaje: "¡Contraseña actualizada con éxito!" });
+        res.json({ ok: true, mensaje: "Contraseña actualizada con éxito!" });
 
     } catch (error) {
         console.error("Error al cambiar contraseña:", error);
