@@ -87,8 +87,8 @@ app.post('/api/recuperar', async (req, res) => {
             'UPDATE usuarios SET reset_token = $1, token_expiracion = $2 WHERE email = $3',
             [token, expiracion, email]
         );
-
-        const linkRecuperacion = `https://ajolote-backend.onrender.com/api/cambiar-password?token=${token}`;
+        const linkRecuperacion = `http://localhost:5500/Ajolote-y-Grulla/cambiarPassword.html?token=${token}`;
+        // const linkRecuperacion = `https://ajolote-backend.onrender.com/api/cambiar-password?token=${token}`;
 
         // Enviar el correo usando la API HTTP de Resend
         await resend.emails.send({
